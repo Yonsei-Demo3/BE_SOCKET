@@ -38,3 +38,6 @@ ehthumbs.db
 Thumbs.db
 
 /src/generated/prisma
+
+# Helper script for generating JWTs
+generate_token.js

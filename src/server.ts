@@ -8,9 +8,11 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.send('<h1>Chat Server</h1>');
+app.get('/health', (req, res) => {
+  res.status(200).json(({ status: 'OK' }));
 });
+
+
 
 io.on('connection', (socket) => {
   console.log('a user connected');
