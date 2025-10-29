@@ -24,9 +24,18 @@ export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
     return next(new Error('서버 설정 오류입니다.'));
   }
 
-  // 토큰은 연결 시 `auth` 객체를 통해 전달될 것으로 예상됩니다.
-  const token = socket.handshake.auth.token;
+  // 클라이언트의 연결 요청 헤더에서 'Authorization' 값을 추출합니다.
+  const authHeader = socket.handshake.headers.authorization;
 
+  // 'Authorization' 헤더가 없거나 'Bearer' 타입이 아니면 에러를 반환합니다.
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next(new Error('인증 오류: Bearer 토큰이 제공되지 않았습니다.'));
+  }
+
+  // 'Bearer ' 부분을 제외한 실제 토큰 값만 추출합니다.
+  const token = authHeader.split(' ')[1];
+
+  // 토큰이 없는 경우 에러를 처리합니다.
   if (!token) {
     return next(new Error('인증 오류: 토큰이 제공되지 않았습니다.'));
   }
