@@ -32,7 +32,7 @@ export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
   // 'Bearer ' 부분을 제외한 실제 토큰 값만 추출합니다.
   const token = authHeader.split(' ')[1];
 
-  // 토큰이 없는 경우 에러를 처리합니다.
+  //토큰이 없는 경우 에러를 처리합니다. 근데 이건 지워도 될 듯?
   if (!token) {
     return next(new Error('인증 오류: 토큰이 제공되지 않았습니다.'));
   }
