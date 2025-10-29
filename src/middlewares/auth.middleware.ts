@@ -14,17 +14,14 @@ declare module 'socket.io' {
 }
 
 export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
-  // 프로덕션 환경에서는 반드시 환경 변수를 사용하여 시크릿 키를 관리해야 합니다.
-  // 예: const secret = process.env.JWT_SECRET;
-  // 여기서는 데모를 위해 플레이스홀더를 사용합니다.
   const secret = process.env.JWT_SECRET || 'YOUR_SECRET_KEY';
-  if (!secret || secret === 'YOUR_SECRET_KEY') {
-    // 실제 앱에서는 이 경우를 적절히 처리해야 합니다.
+
+  if (!secret || secret === 'YOUR_SECRET_KEY') { //env 설정 확인
     console.error("JWT_SECRET이 설정되지 않았습니다. .env 파일을 확인하세요.");
     return next(new Error('서버 설정 오류입니다.'));
   }
 
-  // 클라이언트의 연결 요청 헤더에서 'Authorization' 값을 추출합니다.
+  //인증 헤더 가져오기
   const authHeader = socket.handshake.headers.authorization;
 
   // 'Authorization' 헤더가 없거나 'Bearer' 타입이 아니면 에러를 반환합니다.
@@ -50,4 +47,6 @@ export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
   } catch (err) {
     return next(new Error('인증 오류: 유효하지 않은 토큰입니다.'));
   }
+
+  // TODO: 토큰 정책 확립 후 상세화.
 };
