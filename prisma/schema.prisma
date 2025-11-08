@@ -1,25 +1,120 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model Member {
-  id Int @id @default(autoincrement())
-  loginId String @unique @map("login_id")
-  email String @unique @map("email")
-  password String @map("password")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  @map("members")
+  id              BigInt                   @id @default(autoincrement())
+  phone           String?                  @db.VarChar(30)
+  user_id         String                   @unique(map: "idx_member_user_id_unique") @db.VarChar(36)
+  nickname        String                   @db.VarChar(50)
+  password        String                   @map("password") @db.VarChar(60)
+  social_id       String?                  @db.VarChar(100)
+  profile         String?                  @db.VarChar(500)
+  email           String                   @unique(map: "idx_member_email_unique") @map("email") @db.VarChar(255)
+  role            members_role
+  social_provider members_social_provider?
+  message         message[]
+  questions       questions[]
+  room_members    room_members[]
+
+  @@unique([social_provider, social_id], map: "uk_member_social_provider_id")
+  @@index([social_provider, social_id], map: "idx_member_social")
+  @@map("members")
+}
+
+model contents {
+  id          BigInt      @id @default(autoincrement())
+  creator     String      @db.VarChar(100)
+  image_url   String      @db.VarChar(1000)
+  link        String?     @db.VarChar(1000)
+  description String      @db.VarChar(2000)
+  name        String      @db.VarChar(255)
+  questions   questions[]
+}
+
+model message {
+  id        BigInt       @id @default(autoincrement())
+  member_id BigInt
+  room_id   BigInt
+  content   String       @db.VarChar(255)
+  type      message_type
+  rooms     rooms        @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9byh2oycnq4p3c76777tkjs6g")
+  members   Member       @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfs6v413kpgfmftinvd02yh7hk")
+
+  @@index([room_id], map: "FK9byh2oycnq4p3c76777tkjs6g")
+  @@index([member_id], map: "FKfs6v413kpgfmftinvd02yh7hk")
+}
+
+model questions {
+  max_participants   Int
+  content_id         BigInt
+  host_id            BigInt
+  id                 BigInt           @id @default(autoincrement())
+  parent_question_id BigInt?
+  room_id            BigInt
+  description        String           @db.VarChar(1000)
+  title              String           @db.VarChar(255)
+  status             questions_status
+  members            Member           @relation(fields: [host_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK12wp25dmb46tthcfjqpa9iy30")
+  contents           contents         @relation(fields: [content_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK93r2rqdwq1ki0l45w8v4s2uoo")
+  questions          questions?       @relation("questionsToquestions", fields: [parent_question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9r2v6p3q7l2ydmu5fi2nhojt")
+  other_questions    questions[]      @relation("questionsToquestions")
+  rooms              rooms            @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKjs48hpkafhbiusqvo6ed9gxoo")
+
+  @@index([host_id], map: "FK12wp25dmb46tthcfjqpa9iy30")
+  @@index([content_id], map: "FK93r2rqdwq1ki0l45w8v4s2uoo")
+  @@index([parent_question_id], map: "FK9r2v6p3q7l2ydmu5fi2nhojt")
+  @@index([room_id], map: "FKjs48hpkafhbiusqvo6ed9gxoo")
+}
+
+model refresh_tokens {
+  expires_at DateTime @db.DateTime(6)
+  id         BigInt   @id @default(autoincrement())
+  token_hash String   @unique(map: "idx_refresh_token") @db.VarChar(500)
+  user_id    String   @unique(map: "idx_refresh_member") @db.VarChar(255)
+}
+
+model room_members {
+  id        BigInt @id @default(autoincrement())
+  member_id BigInt
+  room_id   BigInt
+  rooms     rooms  @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK1bbl9rh6ae8v6mebaoq2ilg9g")
+  members   Member @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKgffqvj0pmkw3c2pux87ya87dc")
+
+  @@unique([room_id, member_id], map: "room_member_uk")
+  @@index([member_id], map: "FKgffqvj0pmkw3c2pux87ya87dc")
+}
+
+model rooms {
+  id           BigInt         @id @default(autoincrement())
+  message      message[]
+  questions    questions[]
+  room_members room_members[]
+}
+
+enum message_type {
+  IMAGE
+  TEXT
+}
+
+enum members_role {
+  ADMIN
+  USER
+}
+
+enum questions_status {
+  CLOSED
+  OPEN
+  PREPARING
+}
+
+enum members_social_provider {
+  KAKAO
+  LOCAL
 }
