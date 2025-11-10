@@ -35,16 +35,23 @@ export const roomHandler = (io: Server, socket: Socket) => {
   });
 
   socket.on("leave room", (data: { roomId: bigint }) => {
-    const { roomId } = data;
-    const memberIdStr = socket.data.memberId;
-    const roomIdStr = roomId.toString();
+    try {
+      const { roomId } = data;
+      const memberIdStr = socket.data.memberId;
+      const roomIdStr = roomId.toString();
 
-    socket.leave(roomIdStr);
-    console.log(`User ${memberIdStr} left room: ${roomIdStr}`);
+      socket.leave(roomIdStr);
+      console.log(`User ${memberIdStr} left room: ${roomIdStr}`);
 
-    io.to(roomIdStr).emit("user left", {
-      userId: memberIdStr,
-      message: `${memberIdStr}님이 퇴장했습니다.`,
-    });
+      io.to(roomIdStr).emit("user left", {
+        userId: memberIdStr,
+        message: `${memberIdStr}님이 퇴장했습니다.`,
+      });
+
+    } catch (error) {
+      console.error("Error leaving room:", error);
+      socket.emit("error", { message: "방에서 나가는 중 오류가 발생했습니다." });
+    }
+    
   });
 };
