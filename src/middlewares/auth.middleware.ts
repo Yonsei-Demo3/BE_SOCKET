@@ -1,52 +1,56 @@
 import { Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import prisma from '../services/prisma.service.js';
 
-// 실제 토큰의 사용자 페이로드에 맞게 이 인터페이스를 정의해야 합니다.
-interface UserPayload {
-  id: string;
+interface TokenPayload {
+  sub: string; // user_id
 }
-
-// user를 포함하도록 소켓 데이터 객체를 확장합니다.
+// 3. memberId를 포함하도록 소켓 데이터 객체를 확장합니다.
 declare module 'socket.io' {
   interface SocketData {
-      user?: UserPayload;
+      memberId?: string;
   }
 }
 
-export const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
-  const secret = process.env.JWT_SECRET || 'YOUR_SECRET_KEY';
+export const authMiddleware = async (socket: Socket, next: (err?: Error) => void) => {
+  const secret = process.env.JWT_SECRET;
 
-  if (!secret || secret === 'YOUR_SECRET_KEY') { //env 설정 확인
+  if (!secret) {
     console.error("JWT_SECRET이 설정되지 않았습니다. .env 파일을 확인하세요.");
     return next(new Error('서버 설정 오류입니다.'));
   }
 
-  //인증 헤더 가져오기
   const authHeader = socket.handshake.headers.authorization;
 
-  // 'Authorization' 헤더가 없거나 'Bearer' 타입이 아니면 에러를 반환합니다.
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return next(new Error('인증 오류: Bearer 토큰이 제공되지 않았습니다.'));
   }
 
-  // 'Bearer ' 부분을 제외한 실제 토큰 값만 추출합니다.
   const token = authHeader.split(' ')[1];
 
-  //토큰이 없는 경우 에러를 처리합니다. 근데 이건 지워도 될 듯?
   if (!token) {
     return next(new Error('인증 오류: 토큰이 제공되지 않았습니다.'));
   }
 
   try {
-    // 토큰 검증
-    const decoded = jwt.verify(token, secret) as UserPayload;
+    // 4. 토큰 검증
+    const decoded = jwt.verify(token, secret) as TokenPayload;
 
-    // 나중에 사용할 수 있도록 소켓 객체에 사용자 페이로드를 첨부합니다.
-    socket.data.user = decoded;
+    // 5. 토큰의 sub(user_id)를 사용하여 DB에서 사용자 정보 조회
+    const member = await prisma.members.findUnique({
+      where: {
+        user_id: decoded.sub,
+      },
+    });
+
+    if (!member) {
+      return next(new Error('인증 오류: 사용자를 찾을 수 없습니다.'));
+    }
+
+    // 6. 나중에 사용할 수 있도록 소켓 객체에 memberId를 문자열로 저장
+    socket.data.memberId = member.id.toString();
     next();
   } catch (err) {
     return next(new Error('인증 오류: 유효하지 않은 토큰입니다.'));
   }
-
-  // TODO: 토큰 정책 확립 후 상세화.
 };

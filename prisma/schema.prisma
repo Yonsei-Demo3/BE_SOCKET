@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Member {
+model members {
   id              BigInt                   @id @default(autoincrement())
   phone           String?                  @db.VarChar(30)
   user_id         String                   @unique(map: "idx_member_user_id_unique") @db.VarChar(36)
@@ -45,7 +45,7 @@ model message {
   content   String       @db.VarChar(255)
   type      message_type
   rooms     rooms        @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9byh2oycnq4p3c76777tkjs6g")
-  members   Member       @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfs6v413kpgfmftinvd02yh7hk")
+  members   members      @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfs6v413kpgfmftinvd02yh7hk")
 
   @@index([room_id], map: "FK9byh2oycnq4p3c76777tkjs6g")
   @@index([member_id], map: "FKfs6v413kpgfmftinvd02yh7hk")
@@ -61,7 +61,7 @@ model questions {
   description        String           @db.VarChar(1000)
   title              String           @db.VarChar(255)
   status             questions_status
-  members            Member           @relation(fields: [host_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK12wp25dmb46tthcfjqpa9iy30")
+  members            members          @relation(fields: [host_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK12wp25dmb46tthcfjqpa9iy30")
   contents           contents         @relation(fields: [content_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK93r2rqdwq1ki0l45w8v4s2uoo")
   questions          questions?       @relation("questionsToquestions", fields: [parent_question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9r2v6p3q7l2ydmu5fi2nhojt")
   other_questions    questions[]      @relation("questionsToquestions")
@@ -81,11 +81,11 @@ model refresh_tokens {
 }
 
 model room_members {
-  id        BigInt @id @default(autoincrement())
+  id        BigInt  @id @default(autoincrement())
   member_id BigInt
   room_id   BigInt
-  rooms     rooms  @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK1bbl9rh6ae8v6mebaoq2ilg9g")
-  members   Member @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKgffqvj0pmkw3c2pux87ya87dc")
+  rooms     rooms   @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK1bbl9rh6ae8v6mebaoq2ilg9g")
+  members   members @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKgffqvj0pmkw3c2pux87ya87dc")
 
   @@unique([room_id, member_id], map: "room_member_uk")
   @@index([member_id], map: "FKgffqvj0pmkw3c2pux87ya87dc")
