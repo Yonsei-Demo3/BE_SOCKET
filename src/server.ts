@@ -4,6 +4,7 @@ import http from "http";
 import { Server } from "socket.io";
 import { instrument } from "@socket.io/admin-ui";
 import { authMiddleware } from "./middlewares/auth.middleware.js";
+import { mainHandler } from "./sockets/handler/index.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -29,41 +30,9 @@ app.get("/health", (req, res) => {
 });
 //health Check api
 
+
 io.on("connection", (socket) => {
-  // socket이 클라이언트라고 생각하시면 됩니다. 저기에 메시지를 보내면 클라이언트가 확인 가능합니다.
-  console.log("a user connected:", socket.data.user?.id);
-
-  socket.on("join room", (data: { roomName: string; }) => {
-    // 자기가 속한 룸인지 확인하기
-    socket.join(data.roomName); // 1. 소켓을 특정 방(roomName)에 입장시킵니다.
-    console.log(`User ${socket.data.user?.id} joined room: ${data.roomName}`);
-
-    // (선택) 방에 있는 사람들에게 입장 알림
-    io.to(data.roomName).emit("user joined", {
-      userId: socket.data.user?.id,
-      message: `${socket.data.user?.id}님이 입장했습니다.`
-    });
-  });
-
-  socket.on("leave room", (roomName: string) => {
-    socket.leave(roomName);
-    console.log(`User ${socket.data.user?.id} left room: ${roomName}`);
-    
-    io.to(roomName).emit("user left", {
-      userId: socket.data.user?.id,
-      message: `${socket.data.user?.id}님이 퇴장했습니다.`
-    });
-  });
-
-  socket.on("chat message", (data: { roomName: string; message: string }) => {
-    console.log(`message from ${socket.data.user?.id}: ${data.message}`);
-
-    io.to(data.roomName).emit("chat message", { from: socket.data.user?.id, message: data.message, room: data.roomName });
-  });
-
-  socket.on("disconnect", () => {
-    console.log("user disconnected:", socket.data.user?.id);
-  }); 
+  mainHandler(io, socket);
 });
 
 
