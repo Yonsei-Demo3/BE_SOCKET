@@ -1,0 +1,16 @@
+services:
+  # (서비스 이름, e.g., 'socket-server')
+  socket-server:
+    # (★옵션 1: Dockerfile을 '직접' 빌드)
+    build: . 
+    
+    # (★옵션 2: 이미 빌드한 '이미지' 사용)
+    image: sai-socket-server 
+    
+    container_name: sai-socket # (컨테이너 이름)
+    ports:
+      - "3000:3000" # (포트 매핑)
+    restart: always
+    
+    env_file:
+      - ./.env # (이 한 줄이 '.env' 파일의 모든 변수를 주입합니다)
