@@ -25,7 +25,7 @@ io.use(authMiddleware);
 
 const PORT = process.env.PORT || 3000;
 
-app.get("/health", (req, res) => {
+app.get("/healthz", (req, res) => {
   res.status(200).json({ status: "OK" });
 });
 //health Check api
