@@ -13,4 +13,4 @@ services:
     restart: always
     
     env_file:
-      - ./.env # (이 한 줄이 '.env' 파일의 모든 변수를 주입합니다)
+      - ./.env.docker # (이 한 줄이 '.env' 파일의 모든 변수를 주입합니다)
