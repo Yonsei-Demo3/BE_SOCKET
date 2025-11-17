@@ -73,15 +73,15 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
 
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          
+
           script: |
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
 
             # 최신 이미지 PULL (필수)
-            docker pull ${{ secrets.ECR_REPOSITORY_URI }}:latest
+            sudo docker pull ${{ secrets.ECR_REPOSITORY_URI }}:latest
 
             # docker compose로 재시작 (필수)
             # (EC2에 있는 기존 docker-compose.yml과 .env 파일을 사용)
-            docker compose up -d
+            sudo docker compose up -d
 
-            docker image prune -f
+            sudo docker image prune -f
