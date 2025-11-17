@@ -65,16 +65,15 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
           aws-region: ap-northeast-2
 
-      - name: EC2에 SSH 키 설치
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
       - name: EC2에 배포 스크립트 실행
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST_IP }}
           username: ${{ secrets.EC2_USERNAME }}
+
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          
           script: |
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
 
