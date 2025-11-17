@@ -75,7 +75,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
 
           script: |
-            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
+            aws ecr get-login-password --region ap-northeast-2 | sudo docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
 
             # 최신 이미지 PULL (필수)
             sudo docker pull ${{ secrets.ECR_REPOSITORY_URI }}:latest
