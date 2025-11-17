@@ -53,6 +53,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-push # (1번 'build-and-push' 잡이 성공해야만 실행)
+    permissions:
+      id-token: write # (OIDC 토큰 발급 권한 필수)
+      contents: read
 
     steps:
       - name: AWS OIDC Role 로그인
