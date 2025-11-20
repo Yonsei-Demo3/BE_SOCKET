@@ -15,11 +15,12 @@ const io = new Server(server, {
     origin: [
       "http://localhost:3000",
       "http://localhost:8080",
-      "https://admin.socket.io"
+      "https://admin.socket.io",
+      "https://talkwithsai.com"
     ],
     credentials: true,
   },
-}); //IO가 중앙 서버라고 생각하시면 됩니다.
+});
 
 //TODO: 배포환경과 로컬에서 다르게 작동하도록
 const subscriber = createClient({
