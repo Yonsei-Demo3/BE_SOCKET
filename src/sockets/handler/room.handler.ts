@@ -20,7 +20,7 @@ export const roomHandler = (io: Server, socket: Socket) => {
         return;
       }
 
-      const roomIdStr = roomId.toString();
+      const roomIdStr = String(roomId);
       socket.join(roomIdStr);
       console.log(`User ${memberIdStr} joined room: ${roomIdStr}`);
 
