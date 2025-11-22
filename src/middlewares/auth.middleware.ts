@@ -20,13 +20,13 @@ export const authMiddleware = async (socket: Socket, next: (err?: Error) => void
     return next(new Error('서버 설정 오류입니다.'));
   }
 
-  const authHeader = socket.handshake.headers.authorization;
+  const authToken = socket.handshake.auth.token;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authToken || !authToken.startsWith('Bearer ')) {
     return next(new Error('인증 오류: Bearer 토큰이 제공되지 않았습니다.'));
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authToken.split(' ')[1];
 
   if (!token) {
     return next(new Error('인증 오류: 토큰이 제공되지 않았습니다.'));
