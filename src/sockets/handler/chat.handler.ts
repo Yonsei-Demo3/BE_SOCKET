@@ -1,10 +1,11 @@
 import { Server, Socket } from "socket.io";
 import prisma from "../../services/prisma.service.js";
+import { MessageResponseDTO, type MessageRequestDTO } from "../../dtos/message.dto.js";
 
 export const chatHandler = (io: Server, socket: Socket) => {
-  socket.on("chat message", async (data: { roomId: bigint; message: string }) => {
+  socket.on("chat message", async (data: MessageRequestDTO) => {
     try {
-      const { roomId, message } = data;
+      const { roomId, content, type } = data;
       const memberIdStr = socket.data.memberId;
       const memberId = BigInt(memberIdStr);
 
@@ -20,24 +21,29 @@ export const chatHandler = (io: Server, socket: Socket) => {
         return;
       }
 
+      console.log(content);
+
       // 1. 메시지를 데이터베이스에 저장
-      await prisma.message.create({
+      const savedMessage = await prisma.message.create({
         data: {
           member_id: memberId,
           room_id: roomId,
-          content: message,
+          content: content,
           type: "TEXT", //TODO 타입 세분화
+        },
+        include: {
+          members: {
+            select : {nickname: true}
+          }
         },
       });
 
-      // 2. 방에 있는 모든 클라이언트에게 메시지 전송
+      const responseDto = MessageResponseDTO.from(savedMessage);
+
+      // 2. 방에 있는 모든 클라이언트에게 메시지 전송 TODO: DTO로 변경
       const roomIdStr = roomId.toString();
-      console.log(`message from ${memberIdStr} in room ${roomIdStr}: ${message}`);
-      io.to(roomIdStr).emit("chat message", {
-        from: memberIdStr,
-        message: message,
-        room: roomIdStr,
-      });
+      console.log(`message from ${memberIdStr} in room ${roomIdStr}: ${content}`);
+      io.to(roomIdStr).emit("chat message", responseDto);
       
     } catch (error) {
       console.error("Error handling chat message:", error);
