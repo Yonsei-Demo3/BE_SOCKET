@@ -17,7 +17,7 @@ export namespace MessageResponseDTO {
             content: data.content,
             senderNickname: data.members.nickname,
             type: data.type,
-            createdAt: new Date() //현재 시간으로 수정
+            createdAt: data.created_at //현재 시간으로 수정
         };
     }  
 }

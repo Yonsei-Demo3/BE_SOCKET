@@ -8,19 +8,26 @@ datasource db {
 }
 
 model members {
-  id              BigInt                   @id @default(autoincrement())
-  phone           String?                  @db.VarChar(30)
-  user_id         String                   @unique(map: "idx_member_user_id_unique") @db.VarChar(36)
-  nickname        String                   @db.VarChar(50)
-  password        String                   @map("password") @db.VarChar(60)
-  social_id       String?                  @db.VarChar(100)
-  profile         String?                  @db.VarChar(500)
-  email           String                   @unique(map: "idx_member_email_unique") @map("email") @db.VarChar(255)
-  role            members_role
-  social_provider members_social_provider?
-  message         message[]
-  questions       questions[]
-  room_members    room_members[]
+  id                                                    BigInt                   @id @default(autoincrement())
+  phone                                                 String?                  @db.VarChar(30)
+  user_id                                               String                   @unique(map: "idx_member_user_id_unique") @db.VarChar(36)
+  nickname                                              String                   @db.VarChar(50)
+  password                                              String                   @map("password") @db.VarChar(60)
+  social_id                                             String?                  @db.VarChar(100)
+  profile                                               String?                  @db.VarChar(500)
+  email                                                 String                   @unique(map: "idx_member_email_unique") @map("email") @db.VarChar(255)
+  role                                                  members_role
+  social_provider                                       members_social_provider?
+  friend_requests_friend_requests_receiver_idTomembers  friend_requests[]        @relation("friend_requests_receiver_idTomembers")
+  friend_requests_friend_requests_requester_idTomembers friend_requests[]        @relation("friend_requests_requester_idTomembers")
+  member_friends_member_friends_from_member_idTomembers member_friends[]         @relation("member_friends_from_member_idTomembers")
+  member_friends_member_friends_to_member_idTomembers   member_friends[]         @relation("member_friends_to_member_idTomembers")
+  message                                               message[]
+  message_scraps                                        message_scraps[]
+  notification                                          notification[]
+  question_likes                                        question_likes[]
+  questions                                             questions[]
+  room_members                                          room_members[]
 
   @@unique([social_provider, social_id], map: "uk_member_social_provider_id")
   @@index([social_provider, social_id], map: "idx_member_social")
@@ -28,43 +35,51 @@ model members {
 }
 
 model contents {
-  id          BigInt      @id @default(autoincrement())
-  creator     String      @db.VarChar(100)
-  image_url   String      @db.VarChar(1000)
-  link        String?     @db.VarChar(1000)
-  description String      @db.VarChar(2000)
-  name        String      @db.VarChar(255)
-  questions   questions[]
+  id                BigInt              @id @default(autoincrement())
+  creator           String              @db.VarChar(100)
+  image_url         String              @db.VarChar(1000)
+  link              String?             @db.VarChar(1000)
+  description       String              @db.VarChar(2000)
+  name              String              @db.VarChar(255)
+  category_contents category_contents[]
+  categry_contents  categry_contents[]
+  questions         questions[]
 }
 
 model message {
-  id        BigInt       @id @default(autoincrement())
-  member_id BigInt
-  room_id   BigInt
-  content   String       @db.VarChar(255)
-  type      message_type
-  rooms     rooms        @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9byh2oycnq4p3c76777tkjs6g")
-  members   members      @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfs6v413kpgfmftinvd02yh7hk")
+  id             BigInt           @id @default(autoincrement())
+  member_id      BigInt
+  room_id        BigInt
+  content        String           @db.VarChar(255)
+  type           message_type
+  created_at     DateTime?        @db.DateTime(6)
+  updated_at     DateTime?        @db.DateTime(6)
+  rooms          rooms            @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9byh2oycnq4p3c76777tkjs6g")
+  members        members          @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfs6v413kpgfmftinvd02yh7hk")
+  message_scraps message_scraps[]
 
   @@index([room_id], map: "FK9byh2oycnq4p3c76777tkjs6g")
   @@index([member_id], map: "FKfs6v413kpgfmftinvd02yh7hk")
 }
 
 model questions {
-  max_participants   Int
-  content_id         BigInt
-  host_id            BigInt
-  id                 BigInt           @id @default(autoincrement())
-  parent_question_id BigInt?
-  room_id            BigInt
-  description        String           @db.VarChar(1000)
-  title              String           @db.VarChar(255)
-  status             questions_status
-  members            members          @relation(fields: [host_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK12wp25dmb46tthcfjqpa9iy30")
-  contents           contents         @relation(fields: [content_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK93r2rqdwq1ki0l45w8v4s2uoo")
-  questions          questions?       @relation("questionsToquestions", fields: [parent_question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9r2v6p3q7l2ydmu5fi2nhojt")
-  other_questions    questions[]      @relation("questionsToquestions")
-  rooms              rooms            @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKjs48hpkafhbiusqvo6ed9gxoo")
+  max_participants     Int
+  content_id           BigInt
+  host_id              BigInt
+  id                   BigInt           @id @default(autoincrement())
+  parent_question_id   BigInt?
+  room_id              BigInt
+  description          String           @db.VarChar(1000)
+  title                String           @db.VarChar(255)
+  status               questions_status
+  current_participants Int
+  question_likes       question_likes[]
+  members              members          @relation(fields: [host_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK12wp25dmb46tthcfjqpa9iy30")
+  contents             contents         @relation(fields: [content_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK93r2rqdwq1ki0l45w8v4s2uoo")
+  questions            questions?       @relation("questionsToquestions", fields: [parent_question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9r2v6p3q7l2ydmu5fi2nhojt")
+  other_questions      questions[]      @relation("questionsToquestions")
+  rooms                rooms            @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKjs48hpkafhbiusqvo6ed9gxoo")
+  tag_questions        tag_questions[]
 
   @@index([host_id], map: "FK12wp25dmb46tthcfjqpa9iy30")
   @@index([content_id], map: "FK93r2rqdwq1ki0l45w8v4s2uoo")
@@ -97,6 +112,117 @@ model rooms {
   room_members room_members[]
 }
 
+model categories {
+  id                BigInt              @id @default(autoincrement())
+  name              String              @db.VarChar(100)
+  parent_id         BigInt?
+  categories        categories?         @relation("categoriesTocategories", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKsaok720gsu4u2wrgbk10b5n8d")
+  other_categories  categories[]        @relation("categoriesTocategories")
+  category_contents category_contents[]
+  categry_contents  categry_contents[]
+
+  @@index([parent_id], map: "FKsaok720gsu4u2wrgbk10b5n8d")
+}
+
+model category_contents {
+  id          BigInt     @id @default(autoincrement())
+  category_id BigInt
+  content_id  BigInt
+  categories  categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKfg6tbqsd91v97yatak0f4hm4k")
+  contents    contents   @relation(fields: [content_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKqi3pd7ffci1ddowm4isqrcq42")
+
+  @@index([category_id], map: "FKfg6tbqsd91v97yatak0f4hm4k")
+  @@index([content_id], map: "FKqi3pd7ffci1ddowm4isqrcq42")
+}
+
+model categry_contents {
+  id          BigInt     @id @default(autoincrement())
+  category_id BigInt
+  content_id  BigInt
+  contents    contents   @relation(fields: [content_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK3aoy0mur4ex408xcss8cwj0pc")
+  categories  categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKc569af1htosrn1hvto18xuys5")
+
+  @@index([content_id], map: "FK3aoy0mur4ex408xcss8cwj0pc")
+  @@index([category_id], map: "FKc569af1htosrn1hvto18xuys5")
+}
+
+model friend_requests {
+  id                                            BigInt                 @id @default(autoincrement())
+  created_at                                    DateTime               @db.DateTime(6)
+  message                                       String?                @db.VarChar(500)
+  responded_at                                  DateTime?              @db.DateTime(6)
+  status                                        friend_requests_status
+  receiver_id                                   BigInt
+  requester_id                                  BigInt
+  members_friend_requests_receiver_idTomembers  members                @relation("friend_requests_receiver_idTomembers", fields: [receiver_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK4934b9mmlj2dm0l1kpuw4jg54")
+  members_friend_requests_requester_idTomembers members                @relation("friend_requests_requester_idTomembers", fields: [requester_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKh57li7swpvijeq16urct6krks")
+
+  @@index([receiver_id], map: "FK4934b9mmlj2dm0l1kpuw4jg54")
+  @@index([requester_id], map: "FKh57li7swpvijeq16urct6krks")
+}
+
+model member_friends {
+  id                                             BigInt   @id @default(autoincrement())
+  created_at                                     DateTime @db.DateTime(6)
+  from_member_id                                 BigInt
+  to_member_id                                   BigInt
+  members_member_friends_from_member_idTomembers members  @relation("member_friends_from_member_idTomembers", fields: [from_member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK6v37ywfj2anqq6n660phhualq")
+  members_member_friends_to_member_idTomembers   members  @relation("member_friends_to_member_idTomembers", fields: [to_member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKctigb18ki0b3catflxaxtwc9x")
+
+  @@unique([from_member_id, to_member_id], map: "uk_friend_from_to")
+  @@index([to_member_id], map: "FKctigb18ki0b3catflxaxtwc9x")
+}
+
+model message_scraps {
+  id          BigInt   @id @default(autoincrement())
+  scrapped_at DateTime @db.DateTime(6)
+  member_id   BigInt
+  message_id  BigInt
+  message     message  @relation(fields: [message_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK9m226a26dlaup84f8wc2shrny")
+  members     members  @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKjqkvvv9lcom452pq3d5j3soku")
+
+  @@unique([member_id, message_id], map: "uk_message_scrap_member_message")
+  @@index([message_id], map: "FK9m226a26dlaup84f8wc2shrny")
+}
+
+model notification {
+  id        BigInt            @id @default(autoincrement())
+  is_read   Boolean           @db.Bit(1)
+  type      notification_type
+  member_id BigInt
+  members   members           @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKsx211v1rhgkexuj5drj2kpu0t")
+
+  @@index([member_id], map: "FKsx211v1rhgkexuj5drj2kpu0t")
+}
+
+model question_likes {
+  id          BigInt    @id @default(autoincrement())
+  member_id   BigInt
+  question_id BigInt
+  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKb1mykus7fxmqxkgaa24waxqjf")
+  members     members   @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FKslchr5igfpi5t6mv5yq3b6uyn")
+
+  @@unique([question_id, member_id], map: "uq_question_like")
+  @@index([member_id], map: "FKslchr5igfpi5t6mv5yq3b6uyn")
+}
+
+model tag {
+  id            BigInt          @id @default(autoincrement())
+  name          String          @unique(map: "UK1wdpsed5kna2y38hnbgrnhi5b") @db.VarChar(50)
+  tag_questions tag_questions[]
+}
+
+model tag_questions {
+  id          BigInt    @id @default(autoincrement())
+  question_id BigInt
+  tag_id      BigInt
+  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK6rm1llge33pkhwt6x6urd5ih5")
+  tag         tag       @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK8ltsmx2qq0jvbm675js75q2nd")
+
+  @@unique([question_id, tag_id], map: "question_tag_uk")
+  @@index([tag_id], map: "FK8ltsmx2qq0jvbm675js75q2nd")
+}
+
 enum message_type {
   IMAGE
   TEXT
@@ -116,4 +242,16 @@ enum questions_status {
 enum members_social_provider {
   KAKAO
   LOCAL
+}
+
+enum notification_type {
+  ETC
+  NEW_COMMENT
+  QUESTION_FULL
+}
+
+enum friend_requests_status {
+  ACCEPTED
+  PENDING
+  REJECTED
 }

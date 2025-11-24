@@ -30,6 +30,8 @@ export const chatHandler = (io: Server, socket: Socket) => {
           room_id: roomId,
           content: content,
           type: "TEXT", //TODO 타입 세분화
+          created_at: new Date(),
+          updated_at: new Date(),
         },
         include: {
           members: {
