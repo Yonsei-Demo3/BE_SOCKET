@@ -18,6 +18,7 @@ const io = new Server(server, {
       "http://localhost:8080",
       "https://admin.socket.io",
       "https://talkwithsai.com",
+      "https://www.talkwithsai.com",
       "https://sai-front-68ex.vercel.app"
     ],
     credentials: true,
